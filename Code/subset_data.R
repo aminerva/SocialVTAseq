@@ -1,3 +1,5 @@
+# Script for reading in the neuron seurat objects and subsetting them into celltype specific objects
+
 suppressPackageStartupMessages(library("abind"))
 suppressPackageStartupMessages(library("circlize"))
 suppressPackageStartupMessages(library("cowplot"))

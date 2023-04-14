@@ -1,5 +1,6 @@
 # Script for reading in the neuron seurat objects and subsetting them into celltype specific objects
 
+print("Loading packages")
 suppressPackageStartupMessages(library("abind"))
 suppressPackageStartupMessages(library("circlize"))
 suppressPackageStartupMessages(library("cowplot"))
@@ -25,10 +26,10 @@ suppressPackageStartupMessages(library("tidyr"))
 set.seed(305)
 
 print("Reading in the integrated object")
-all_samples <- readRDS(file="../../../seurat_objects/all_samples_integrated_clustered_2000features_10pcs_0.1res.RDS") 
+all_samples <- readRDS(file="../../../seurat_objects/all_samples_integrated_clustered_2000features_10pcs_0.05res.RDS") 
 
 print("Pulling out neurons only")
-all_neurons <- subset(all_samples, idents = c(ADD NEURON CLUSTER NUMBERS HERE) )
+all_neurons <- subset(all_samples, idents = c("1","3","6") )
 saveRDS(all_neurons, file="../../../seurat_objects/all_conditions_all_neurons.RDS")
 
 print("Creating separate objects for each condition (control, hungry, and sated)")

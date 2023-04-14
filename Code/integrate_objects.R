@@ -2,8 +2,6 @@
 print("Loading packages")
 suppressPackageStartupMessages(library("Seurat"))
 suppressPackageStartupMessages(library("ggplot2")) 
-suppressPackageStartupMessages(library("grid"))
-suppressPackageStartupMessages(library("gridExtra"))
 suppressPackageStartupMessages(library("dplyr"))
 
 print("Reading in Seurat objects")
@@ -88,42 +86,6 @@ ElbowPlot(integrated_samples, ndim=50)
 plotname1 <- paste0("../../../plots/all_samples_integrated_",nFeats,"features_elbow.png")
 ggsave(plotname1, width=10, height=6,dpi=320)
 
-
-print("Running UMAP")
-pcs <- 10
-DefaultAssay(integrated_samples) <- "integrated"
-integrated_samples <- RunUMAP(integrated_samples, reduction = "pca", dims = 1:pcs)
-print("UMAP embedding completed!")
-
-print("Clustering")
-integrated_samples <- FindNeighbors(integrated_samples, reduction = "pca", dims = 1:pcs)
-integrated_samples <- FindClusters(integrated_samples, resolution = res)
-print("Clustering finished!")
-
-print("Saving the reduced and clustered dataset")
-integrated_fname <- paste0("../../../seurat_objects/all_samples_integrated_clustered_",nFeats,"features_",pcs,"pcs_",res,"res.RDS")
-saveRDS(integrated_samples, file=integrated_fname)
-
-
-print("Plotting UMAP and DotPlot")
-DefaultAssay(integrated_samples) <- "RNA"
-print("Making UMAP")
-plotname2 <- paste0("../../../plots/all_samples_integrated_clustered_",nFeats,"features_",pcs,"pcs_",res,"res_umap.png")
-DimPlot(integrated_samples, reduction = "umap", label = FALSE, repel = TRUE)
-ggsave(plotname2, width=6, height=6,dpi=320)
-
-
-print("Making dotplot")
-marker_features <- rev(c("Syt1", "Rbfox3", 
-                         "Th", "Ddc", "Slc6a3",
-                         "Slc17a6", "Gad1", "Gad2", 
-                         "Aqp4", "Cx3cr1", "Pdgfra", "Mog", "Mobp", "Cldn5", "Vtn"))
-plotname3 <- paste0("../../../plots/all_samples_integrated_clustered_",nFeats,"features_",pcs,"pcs_",res,"res_dotplot.png")
-DotPlot(integrated_samples, features = marker_features, dot.scale=10, col.min=0, 
-        cols=c("#F9F9F9","darkorchid4")) + labs(y="Cluster", x="Gene") + coord_flip() +
-        theme(plot.background=element_rect(fill="white", color="white"))
-ggsave(plotname3, width=10, height=6,dpi=320)
-
-print(integrated_samples)
 print("All done!")
+print("Look at elbow plot for PCs to use for UMAP embedding and clsutering")
 

@@ -2,7 +2,7 @@
 
 #SBATCH --mail-user=aminerva@princeton.edu
 #SBATCH --mail-type=START,END,FAIL
-#SBATCH --time=90:00:00
+#SBATCH --time=30:00:00
 #SBATCH --mem=240000
 #SBATCH -N 1
 #SBATCH -c 20

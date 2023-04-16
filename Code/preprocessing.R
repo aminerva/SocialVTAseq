@@ -56,9 +56,9 @@ for (i in 1:length(samples)) {
     }
     
     # Mitochondrial and ribosomal genes
-    samples[[i]][["percent.mt"]] <- PercentageFeatureSet(samples[[i]], pattern="^mt-")
-    samples[[i]][["percent.Rps"]] <- PercentageFeatureSet(samples[[i]], pattern="^Rps")
-    samples[[i]][["percent.Rpl"]] <- PercentageFeatureSet(samples[[i]], pattern="^Rpl")
+    samples[[i]][["percent.mt"]] <- PercentageFeatureSet(samples[[i]], pattern="mt-")
+    samples[[i]][["percent.Rps"]] <- PercentageFeatureSet(samples[[i]], pattern="Rps")
+    samples[[i]][["percent.Rpl"]] <- PercentageFeatureSet(samples[[i]], pattern="Rpl")
 }
 
 print("Making and saving violin plots with QC metrics for each sample")
@@ -169,7 +169,11 @@ for (i in 1:length(samples)) {
 
     # Remove mitochondrial and ribosomal genes 
     all_genes <- rownames(samples[[i]])
-    genes_to_remove <- rownames(samples[[i]])[startsWith(rownames(samples[[i]]), c("mt-","Rpl","Rps"))]
+    genes_to_remove <- rownames(samples[[i]])[startsWith(rownames(samples[[i]]), c("mt-"))]
+    genes_to_remove <- c(genes_to_remove, 
+                         rownames(samples[[i]])[startsWith(rownames(samples[[i]]), c("Rpl"))])
+    genes_to_remove <- c(genes_to_remove, 
+                         rownames(samples[[i]])[startsWith(rownames(samples[[i]]), c("Rps"))])
     genes_to_keep <- all_genes[!(all_genes %in% genes_to_remove)]
     samples[[i]] <- subset(samples[[i]], features = genes_to_keep)
 }

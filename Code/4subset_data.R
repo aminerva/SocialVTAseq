@@ -27,7 +27,8 @@ set.seed(305)
 
 print("Reading in the integrated object")
 all_samples <- readRDS(file="../../../seurat_objects/all_samples_integrated_clustered_2000features_10pcs_0.05res.RDS") 
-
+all_samples <- subset(all_samples, idents = c("0","1","2","3","4","5","6","7")) # Cluster 8 bad qual
+DefaultAssay(all_samples) <- "RNA"
 
 print("Pulling out neurons only")
 all_neurons <- subset(all_samples, idents = c("1","3","6") )

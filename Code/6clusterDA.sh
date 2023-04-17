@@ -14,4 +14,4 @@ module load seurat
 
 # $1 = the number of PCs
 # $2 = the clustering resolution
-Rscript --vanilla 3UMAP_cluster.R $1 $2 
+Rscript --vanilla 6clusterDA.R $1 $2 

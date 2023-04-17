@@ -37,6 +37,7 @@ gaba_degs <- read.csv(file="../../../analysis/gaba_degs.csv")
 glut_degs <- read.csv(file="../../../analysis/glut_degs.csv")
 all_hungry_sated_degs <- read.csv(file="../../../analysis/all_hungry_sated_degs.csv")
 
+######## panel B
 print("Making volcano plot for each celltype")
 cols <- c("down"=hungry_sated_pal[1],"no"=hungry_sated_pal[2],"up"=hungry_sated_pal[3])
 options(repr.plot.width = 15, repr.plot.height = 5) 
@@ -101,3 +102,37 @@ ggplot(na.omit(all_hungry_sated_degs), aes(x=celltype, fill=celltype)) + geom_ba
     scale_y_continuous(expand=c(0,0)) 
 ggsave(file="../../../plots/hungry_sated_deg_counts.pdf",
        width=3.5, height=4,dpi=320)
+
+######## panel C
+# List of genes relevant to feeding or social hormone receptors
+food_receptors <- c("Cckar", "Cckbr","Ghsr", "Gipr", "Gpr171", "Hcrtr1", "Hcrtr2", "Insr",  "Lepr", 
+                    "Mc1r", "Mc3r", "Mc4r", "Npy1r", "Pparg", "Slc16a2", "Thra", "Thrb", "Trhr", "Tshr") 
+food_enzymes <- c("Pcsk1", "Pcsk2", "Cpe")
+social_receptors <- c("Ar", "Avpr1a", "Esr1", "Esr2",  "Kiss1r", "Oxtr", "Pgr", "Prlr")  
+social_enzymes <- c("Cyp19a1", "Cyp11a1", "Hsd3b2", "Srd5a1", "Srd5a2", "Srd5a3") 
+food_genes <- c(food_receptors, food_enzymes)
+social_genes <- c(social_receptors, social_enzymes)
+food_social_genes <- c(food_genes, social_genes)
+
+print("Reading in DA clustered seurat object")
+all_da <- readRDS(file="../../../seurat_objects/all_da_integrated_clustered_2000features_8pcs_0.3res.RDS")
+
+print("Plotting heatmap of DA subcluster marker genes")
+da_markers <- read.csv("../../../analysis/all_da_8pcs_0.3res_markers.csv")
+da_top5_unique <- da_markers %>% ungroup() %>% distinct(gene, .keep_all = TRUE) %>% 
+                           group_by(cluster) %>% top_n(n = 5, wt = avg_log2FC)
+write.csv(da_top5_unique, file="../../../analysis/all_da_top5_unique_markers.csv")
+
+DoHeatmap(all_da, features=c(da_top5_unique[['gene']],food_social_genes), slot="data",
+          angle=0)+#, group.colors=da_pal) +
+
+    scale_fill_gradient2(low = '#2166ac', mid = "white", high = "#3E3E3E",
+                         midpoint = 0, guide = "colourbar", aesthetics="fill") 
+
+ggsave("../../../paper_figures/4C.pdf", width=12, height=4,dpi=320)
+
+######## panel D
+
+
+
+

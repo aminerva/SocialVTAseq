@@ -32,6 +32,7 @@ Idents(hungry_sated_da) <- "condition"
 Idents(hungry_sated_gaba) <- "condition"
 Idents(hungry_sated_glut) <- "condition"
 
+print("Finding calculating expression across conditions")
 da_degs <- FindMarkers(hungry_sated_da, ident.1="sated", ident.2="hungry", test.use="DESeq2",
                               logfc.threshold=0)
 gaba_degs <- FindMarkers(hungry_sated_gaba, ident.1="sated", ident.2="hungry", test.use="DESeq2",
@@ -47,8 +48,22 @@ da_degs$celltype <- rep("dopamine",nrow(da_degs))
 gaba_degs$celltype <- rep("gaba",nrow(gaba_degs))
 glut_degs$celltype <- rep("glut",nrow(glut_degs))
 
+print("Assigning DEG labels based on logFC and pvalue")
+da_degs$diffexpressed <- "no"
+da_degs$diffexpressed[da_degs$avg_log2FC > 0.38 & da_degs$p_val_adj < 0.05] <- "up"
+da_degs$diffexpressed[da_degs$avg_log2FC < -0.38 & da_degs$p_val_adj < 0.05] <- "down"
+
+gaba_degs$diffexpressed <- "no"
+gaba_degs$diffexpressed[gaba_degs$avg_log2FC > 0.38 & gaba_degs$p_val_adj < 0.05] <- "up"
+gaba_degs$diffexpressed[gaba_degs$avg_log2FC < -0.38 & gaba_degs$p_val_adj < 0.05] <- "down"
+
+glut_degs$diffexpressed <- "no"
+glut_degs$diffexpressed[glut_degs$avg_log2FC > 0.38 & glut_degs$p_val_adj < 0.05] <- "up"
+glut_degs$diffexpressed[glut_degs$avg_log2FC < -0.38 & glut_degs$p_val_adj < 0.05] <- "down"
+
 all_hungry_sated_degs <- rbind(da_degs,gaba_degs,glut_degs)
 
+print("Saving results to csv")
 write.csv(da_degs, file="../../../analysis/da_degs.csv")
 write.csv(gaba_degs, file="../../../analysis/gaba_degs.csv")
 write.csv(glut_degs, file="../../../analysis/glut_degs.csv")

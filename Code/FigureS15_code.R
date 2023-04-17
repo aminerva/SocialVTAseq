@@ -25,8 +25,8 @@ suppressPackageStartupMessages(library("tibble"))
 suppressPackageStartupMessages(library("tidyr"))
 
 set.seed(305)
-pcs <- XXXX
-res <- YYYY
+pcs <- 10
+res <- 0.05
 print(paste("using", pcs, "PCs"))
 print(paste("using", res, "clustering resolution"))
 

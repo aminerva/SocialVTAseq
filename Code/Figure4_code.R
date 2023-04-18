@@ -26,10 +26,23 @@ suppressPackageStartupMessages(library("tidyr"))
 
 set.seed(305)
 
+pcs <- 10 
+res <- 0.3 
+
 hungry_sated_pal <- natparks.pals("Glacier", 5)
 hungry_sated_pal <- c(hungry_sated_pal[2], # sated
             		  "gray", # control
             		  hungry_sated_pal[4]) # hungry
+
+da_pal <- c("#B2C247",
+            "#1B876F",
+            "#9EDF94",
+            "#1B2E1A",
+            "#778071",
+            "#61C1A4",
+            "#B6DF47",
+            "#366C0B",
+            "#A4FF67")
 
 print("Reading in csvs with previously calculated DEGs")
 da_degs <- read.csv(file="../../../analysis/da_degs.csv")
@@ -103,7 +116,18 @@ ggplot(na.omit(all_hungry_sated_degs), aes(x=celltype, fill=celltype)) + geom_ba
 ggsave(file="../../../plots/hungry_sated_deg_counts.pdf",
        width=3.5, height=4,dpi=320)
 
-######## panel C
+######## panel E
+print("Reading in DA clustered seurat object")
+all_da <- readRDS(file=paste0("../../../seurat_objects/all_da_integrated_clustered_2000features_",pcs,"pcs_",res,"res.RDS"))
+
+print("Plotting UMAP")
+plotname2 <- paste0("../../../plots/all_da_integrated_clustered_2000features_",pcs,"pcs_",res,"res_umap.png")
+DimPlot(all_da, reduction="umap", label=FALSE, pt.size=0.1, order=FALSE, repel=TRUE) + 
+    scale_colour_manual(values = da_pal) + NoAxes() + NoLegend()
+ggsave("../../../paper_figures/4E.pdf", width=4, height=3,dpi=320)
+
+######## panel F
+
 # List of genes relevant to feeding or social hormone receptors
 food_receptors <- c("Cckar", "Cckbr","Ghsr", "Gipr", "Gpr171", "Hcrtr1", "Hcrtr2", "Insr",  "Lepr", 
                     "Mc1r", "Mc3r", "Mc4r", "Npy1r", "Pparg", "Slc16a2", "Thra", "Thrb", "Trhr", "Tshr") 
@@ -114,24 +138,58 @@ food_genes <- c(food_receptors, food_enzymes)
 social_genes <- c(social_receptors, social_enzymes)
 food_social_genes <- c(food_genes, social_genes)
 
-print("Reading in DA clustered seurat object")
-all_da <- readRDS(file="../../../seurat_objects/all_da_integrated_clustered_2000features_8pcs_0.3res.RDS")
-
 print("Plotting heatmap of DA subcluster marker genes")
-da_markers <- read.csv("../../../analysis/all_da_8pcs_0.3res_markers.csv")
+da_markers <- read.csv(paste0("../../../analysis/all_da_",pcs,"pcs_",res,"res_markers.csv"))
 da_top5_unique <- da_markers %>% ungroup() %>% distinct(gene, .keep_all = TRUE) %>% 
                            group_by(cluster) %>% top_n(n = 5, wt = avg_log2FC)
 write.csv(da_top5_unique, file="../../../analysis/all_da_top5_unique_markers.csv")
-
 DoHeatmap(all_da, features=c(da_top5_unique[['gene']],food_social_genes), slot="data",
-          angle=0)+#, group.colors=da_pal) +
-
+          angle=0, group.colors=da_pal) +
     scale_fill_gradient2(low = '#2166ac', mid = "white", high = "#3E3E3E",
                          midpoint = 0, guide = "colourbar", aesthetics="fill") 
+ggsave("../../../paper_figures/4F.pdf", width=10, height=3,dpi=320)
 
-ggsave("../../../paper_figures/4C.pdf", width=12, height=4,dpi=320)
+######## panel G
+gene1 <- XX
+print(paste("Making feature plot for", gene1, "in dopamine neurons")
+if (gene1 %in% food_genes) {
+        fp <- FeaturePlot(all_da, features=gene1, slot="data", 
+                     order=TRUE, cols=c("#e8e8e8","#855e41"), 
+                         pt.size=0.5) + labs(title=gene1) + NoAxes()
+    } else if (food_social_genes[gene] %in% social_genes) {
+        fp <- FeaturePlot(all_da, features=gene1, slot="data", 
+                     order=TRUE, cols=c("#e8e8e8","#8BB1DD"), 
+                         pt.size=0.5) + labs(title=gene1) + NoAxes()
+    } 
+savename1 <- paste0("../../../plots/",gene1,"_da_neurons_featureplot.pdf")
+    ggsave(savename1, width=4, height=3,dpi=320)
 
-######## panel D
+######## panel H
+gene2 <- XX
+print(paste("Making feature plot for", gene2, "in dopamine neurons")
+if (gene2 %in% food_genes) {
+        fp <- FeaturePlot(all_da, features=gene2, slot="data", 
+                     order=TRUE, cols=c("#e8e8e8","#855e41"), 
+                         pt.size=0.5) + labs(title=gene2) + NoAxes()
+} else if (gene2 %in% social_genes) {
+    fp <- FeaturePlot(all_da, features=gene2, slot="data", 
+                 order=TRUE, cols=c("#e8e8e8","#8BB1DD"), 
+                     pt.size=0.5) + labs(title=gene2) + NoAxes()
+} 
+savename2 <- paste0("../../../plots/",gene2,"_da_neurons_featureplot.pdf")
+    ggsave(savename2, width=4, height=3,dpi=320)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

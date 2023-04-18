@@ -80,7 +80,7 @@ DoHeatmap(all_da, features=c(da_top5_unique[['gene']],food_social_genes), slot="
           scale_fill_gradient2(low = '#2166ac', mid = "white", high = "#3E3E3E",
                                midpoint = 0, guide = "colourbar", aesthetics="fill") 
 
-ggsave(paste0("../../../plots/DA_markers_heatmap_",pcs,"pcs_",res,"res.pdf"), width=12, height=4,dpi=320)")
+ggsave(paste0("../../../plots/DA_markers_heatmap_",pcs,"pcs_",res,"res.pdf"), width=12, height=4,dpi=320)
 
 print("All done!")
 

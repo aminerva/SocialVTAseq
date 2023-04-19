@@ -16,7 +16,9 @@ suppressPackageStartupMessages(library("Matrix"))
 suppressPackageStartupMessages(library("metap")) 
 suppressPackageStartupMessages(library("NatParksPalettes"))         
 suppressPackageStartupMessages(library("patchwork"))
+suppressPackageStartupMessages(library("pheatmap"))
 suppressPackageStartupMessages(library("purrr"))
+suppressPackageStartupMessages(library("RColorBrewer"))
 suppressPackageStartupMessages(library("reldist"))
 suppressPackageStartupMessages(library("scales"))
 suppressPackageStartupMessages(library("Seurat"))
@@ -70,6 +72,13 @@ for (gene in seq_along(food_social_genes)) {
     print(paste(food_social_genes[gene], "done!"))
 }
 
+options(repr.plot.width = 5, repr.plot.height = 3) 
+cells <- WhichCells(all_da, expression = Insr > 1 & Ar > 1)
+DimPlot(all_da, cells.highlight=cells, cols="#e8e8e8", cols.highlight="#F2C27B",  
+        pt.size=0.5, sizes.highlight=0.5) + 
+    NoAxes() + NoLegend()
+ggsave(file="../../../paper_figures/Insr_Ar_da_neurons_featureplot.pdf", width=5, height=3, dpi=320)
+
 ############
 
 print("Calculating coexpression of each food/social gene pair in DA, GABA, and glutamate neurons")
@@ -81,10 +90,10 @@ DefaultAssay(all_neurons) <- "RNA"
 print("Pulling out just dopamine neurons")
 all_da <- subset(all_neurons, subset = Slc6a3 > 0 | Th > 0 ) 
 all_da[["nucleusID"]] <- colnames(all_da)
-saveRDS(all_da, file="../../../seurat_objects/all_da.RDS") 
+saveRDS(all_da, file="../../../seurat_objects/all_da.RDS")  
 
 print("Pulling out just GABA neurons")
-all_gaba <- subset(all_neurons, subset = Slc32a1>0 & Slc6a3==0 & Th==0 & Slc17a6==0 & Slc17a7==0 & Slc17a8==0 | Gad1>0 & Slc6a3==0 & Th==0 & Slc17a6==0 & Slc17a7==0 & Slc17a8==0 | Gad2>0 & Slc6a3==0 & Th==0 & Slc17a6==0 & Slc17a7==0 & Slc17a8==0)
+all_gaba <- subset(all_neurons, subset = Slc32a1>0 & Slc6a3==0 & Th==0 & Slc17a6==0& Slc17a7==0 & Slc17a8==0 | Gad1>0 & Slc6a3==0 & Th==0 & Slc17a6==0 & Slc17a7==0 & Slc17a8==0 | Gad2>0 & Slc6a3==0 & Th==0 & Slc17a6==0 & Slc17a7==0 & Slc17a8==0)
 all_gaba[["nucleusID"]] <- colnames(all_gaba)
 saveRDS(all_gaba, file="../../../seurat_objects/all_gaba.RDS") 
 
@@ -135,7 +144,6 @@ sim_lists <- list("all_da"=list(), "all_gaba"=list(), "all_glut"=list()) # num c
 g_sim_pvals <- list("all_da"=list(), "all_gaba"=list(), "all_glut"=list()) # pvals for > chance overlap
 l_sim_pvals <- list("all_da"=list(), "all_gaba"=list(), "all_glut"=list()) # pvals for < chance overlap
 
-#states <- c("ctrl","hungry","sated")
 for (type in seq_along(celltypes)) { # Iterate through the three cell types
     
     print(paste("Starting calculations for", celltypes[type]))
@@ -143,6 +151,7 @@ for (type in seq_along(celltypes)) { # Iterate through the three cell types
     for (i in seq_along(food_genes)) { # Iterate through food genes
         
         for (j in seq_along(social_genes)) { # Iterate through social genes
+
 
             celltype <- celltypes[type] 
             food_gene <- food_genes[i]
@@ -153,6 +162,8 @@ for (type in seq_along(celltypes)) { # Iterate through the three cell types
             nboth <- 0
             ntotal <- ncol(get(celltypes[type]))
 
+            print(paste("Calculating overlap for", food_gene, "and", social_gene))
+            
             # Calculate # of cells of given type expressing the food gene from the pair
             nfood_gene <- nfood_gene + length(ID_list[[celltypes[type]]][[food_gene]])
 
@@ -190,6 +201,14 @@ for (type in seq_along(celltypes)) { # Iterate through the three cell types
                          paste0("None (",pie_pct[4],"%)"))
             pie_labs[[celltype]] <- c(pie_labs[[celltype]], list(pie_lab)) # Save to list
             
+            print("Plotting and saving pie chart")
+            options(repr.plot.width = 6, repr.plot.height = 5)
+            pie_savename <- paste0("../../../plots/",food_gene,"_",social_gene,"_",celltype,"_pie.pdf")
+            pdf(file=pie_savename)
+            par(lwd=3)
+            pie(pie_ct, pie_lab, border="white", init.angle=90, clockwise=TRUE, main=celltype,
+                col = alpha(c(food_social_pal[1], food_social_pal[2], food_social_pal[3], food_social_pal[4]), 0.8)) 
+            dev.off()
 
             ## SIMULATED OVERLAP DISTRIBUTION ##
 
@@ -212,11 +231,33 @@ for (type in seq_along(celltypes)) { # Iterate through the three cell types
                 return(sim)
             })
 
+            print("Plotting and saving simulated overlap")
             sim_lists[[type]] <- c(sim_lists[[type]], list(simulated)) # Save simulated co-expr to list
+            sim_df <- data.frame(Simulated=simulated) %>% 
+                      pivot_longer(everything(), names_to="Method", values_to="Overlap") %>%
+                          as.data.frame()
+
             greater_pval <- (sum(simulated >= nboth) + 1) / (10000 + 1) # <0.05 if real >= sim
             g_sim_pvals[[type]] <- c(g_sim_pvals[[type]], list(greater_pval)) 
             less_pval <- (sum(simulated <= nboth) + 1) / (10000 + 1) # <0.05 if real <= sim
             l_sim_pvals[[type]] <- c(l_sim_pvals[[type]], list(less_pval)) 
+
+            print(paste(food_gene, "-", social_gene, "overlap greater than chance pval=", greater_pval))
+            print(paste(food_gene, "-", social_gene, "overlap less than chance pval=", less_pval))
+
+            ggplot(sim_df, aes(x=Overlap, fill=Method)) +
+                geom_histogram(binwidth=2, col="white") +
+                geom_vline(xintercept=nboth, lty=2, color="#F1EE88", size=2) +
+                theme_bw() + 
+                theme(text=element_text(size=12), legend.position="none", 
+                      panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+                      panel.border = element_blank(), panel.background = element_blank(), 
+                      axis.line = element_line(colour = "black")) +
+                scale_fill_manual(values=c("gray")) + ylab("Count") +
+                labs(title = paste(food_gene,"-",social_gene), 
+                     subtitle = paste0("p>real=", round(greater_pval,5), " / p<real=", round(less_pval,5)))
+            savename <- paste0("../../../plots/",food_gene,"_",social_gene,"_",celltype,"_overlap_simulation.pdf")
+            ggsave(file=savename,width=6,height=5,dpi=320)
         }
 
         print(paste("All social gene comparisons with", food_genes[i], "for", celltypes[type], "nuclei done!"))   
@@ -263,9 +304,12 @@ for (type in seq_along(celltypes)) {
     colnames(less_pval_mat) <- food_genes
     assign(paste0(celltypes[type],"_less_pvals"), less_pval_mat)
 }
-coexpr_mat <- abind(da_coexpr, gaba_coexpr, glut_coexpr, along=3)   
-g_pval_mat <- abind(da_greater_pvals, gaba_greater_pvals, glut_greater_pvals, along=3)   
-l_pval_mat <- abind(da_less_pvals, gaba_less_pvals, glut_less_pvals, along=3)
+coexpr_mat <- abind(all_da_coexpr, all_gaba_coexpr, all_glut_coexpr, along=3)   
+g_pval_mat <- abind(all_da_greater_pvals, all_gaba_greater_pvals, all_glut_greater_pvals, along=3)   
+l_pval_mat <- abind(all_da_less_pvals, all_gaba_less_pvals, all_glut_less_pvals, along=3)
+saveRDS(coexpr_mat, file="../../../analysis/coexpr_mat.RDS")
+saveRDS(g_pval_mat, file="../../../analysis/g_pval_mat.RDS")
+saveRDS(l_pval_mat, file="../../../analysis/l_pval_mat.RDS")
 
 print("Reshaping the overlap matrices into dataframes for plotting")
 for (type in seq_along(celltypes)) {
@@ -286,39 +330,48 @@ for (type in seq_along(celltypes)) {
     assign(paste0(celltypes[type],"_lpval_df"), l_pval_df)
 }
 
-all_coexpr_df <- rbind(da_coexpr_df[c("pct_both", "celltype")], 
-                       gaba_coexpr_df[c("pct_both", "celltype")], 
-                       glut_coexpr_df[c("pct_both", "celltype")])
-all_gpval_df <- rbind(da_gpval_df[c("pvalue", "celltype")], 
-                      gaba_gpval_df[c("pvalue", "celltype")], 
-                      glut_gpval_df[c("pvalue", "celltype")])
-all_lpval_df <- rbind(da_lpval_df[c("pvalue", "celltype")], 
-                      gaba_lpval_df[c("pvalue", "celltype")], 
-                      glut_lpval_df[c("pvalue", "celltype")])
+all_coexpr_df <- rbind(all_da_coexpr_df[c("pct_both", "celltype")], 
+                       all_gaba_coexpr_df[c("pct_both", "celltype")], 
+                       all_glut_coexpr_df[c("pct_both", "celltype")])
+all_gpval_df <- rbind(all_da_gpval_df[c("pvalue", "celltype")], 
+                      all_gaba_gpval_df[c("pvalue", "celltype")], 
+                      all_glut_gpval_df[c("pvalue", "celltype")])
+all_lpval_df <- rbind(all_da_lpval_df[c("pvalue", "celltype")], 
+                      all_gaba_lpval_df[c("pvalue", "celltype")], 
+                      all_glut_lpval_df[c("pvalue", "celltype")])
+saveRDS(all_coexpr_df, file="../../../analysis/all_coexpr_df.RDS")
+saveRDS(all_gpval_df, file="../../../analysis/all_gpval_df.RDS")
+saveRDS(all_lpval_df, file="../../../analysis/all_lpval_df.RDS")
+
 
 print("Performing tests of proportions")
-pct_sig <- all_gpval_df[all_gpval_df$celltype %in% c("da","gaba","glut"),] %>% 
+pct_sig <- all_gpval_df[all_gpval_df$celltype %in% c("all_da","all_gaba","all_glut"),] %>% 
                    group_by(celltype) %>% summarise(n=length(which(pvalue<0.05)), 
                                              pct=round(n/(nrow(g_pval_mat)*ncol(g_pval_mat))*100, 2))
-n_da <- pct_sig[pctsigp$celltype=="da",]$n
-n_gaba <- pct_sig[pct_sig$celltype=="gaba",]$n
-n_glut <- pct_sig[pct_sig$celltype=="glut",]$n
+n_da <- pct_sig[pct_sig$celltype=="all_da",]$n
+n_gaba <- pct_sig[pct_sig$celltype=="all_gaba",]$n
+n_glut <- pct_sig[pct_sig$celltype=="all_glut",]$n
 total_pairs <- length(food_genes) * length(social_genes)
 
 p_da_gaba <- round(prop.test(x = c(n_da, n_gaba), n = c(total_pairs, total_pairs), correct=TRUE)$p.value, 3)
-print(paste("DA vs GABA:", p_da_gaba)
+chi_da_gaba <- round(prop.test(x = c(n_da, n_gaba), n = c(total_pairs, total_pairs), correct=TRUE)$statistic, 3)
+print(paste0("DA vs GABA: p=", p_da_gaba, " / chi.squared=", chi_da_gaba))
 p_da_glut <- round(prop.test(x = c(n_da, n_glut), n = c(total_pairs, total_pairs), correct=TRUE)$p.value, 3)
-print(paste("DA vs glut:", p_da_glut)
+chi_da_glut <- round(prop.test(x = c(n_da, n_glut), n = c(total_pairs, total_pairs), correct=TRUE)$statistic, 3)
+print(paste0("DA vs glut: p=", p_da_glut, " / chi.squared=", chi_da_glut))
 p_gaba_glut <- round(prop.test(x = c(n_gaba, n_glut), n = c(total_pairs, total_pairs), correct=TRUE)$p.value, 3)
-print(paste("GABA vs glut:", p_gaba_glut)
+chi_gaba_glut <- round(prop.test(x = c(n_gaba, n_glut), n = c(total_pairs, total_pairs), correct=TRUE)$statistic, 3)
+print(paste0("GABA vs glut: p=", p_gaba_glut, " / chi.squared=", chi_gaba_glut))
 
 print("Plotting")
+
 options(repr.plot.width = 3, repr.plot.height = 4) 
-all_gpval_df[all_gpval_df$celltype %in% c("da","gaba","glut"),] %>% 
+cols <- c("all_da"="#65A286", "all_gaba"="#965cb5", "all_glut"="#e8d568")
+all_gpval_df[all_gpval_df$celltype %in% c("all_da","all_gaba","all_glut"),] %>% 
     group_by(celltype) %>%
         summarise(n=length(which(pvalue<0.05)), pct=round(n/(nrow(g_pval_mat)*ncol(g_pval_mat))*100, 0)) %>%
             ggplot(mapping=aes(x=celltype,y=pct,fill=celltype)) + 
-                geom_col() +
+                geom_col() + scale_fill_manual(values=cols) +
                 theme_bw() + NoLegend() + 
                 theme(panel.grid.major = element_blank(), 
                       panel.grid.minor = element_blank(), 
@@ -329,14 +382,76 @@ all_gpval_df[all_gpval_df$celltype %in% c("da","gaba","glut"),] %>%
                       axis.text.x = element_text(size=15, color="black", angle=0),
                       axis.title.y = element_text(size=18, color="black"), 
                       axis.text.y = element_text(size=15, color="black")) +
-                scale_y_continuous(expand=expansion(mult=c(0,0.05)), breaks=c(0,5,10,15)) +
-                labs(y="percentage of pairs \n overlapping more than chance", x=" ", title="(all conditions)") +
+                scale_y_continuous(expand=expansion(mult=c(0,0.05)), breaks=c(0,5,10,15,20)) +
+                labs(y="percentage of pairs \n overlapping more than chance", x=" ") +
                 scale_x_discrete(expand=c(0.2,0.2), labels=c("da","gaba","glut")) +
-                annotate(geom="text", label="*", x=2, y=18.0, size=8) +
-                annotate(geom="segment", y=17.8, yend=17.8, x=1, xend=3) +
-                annotate(geom="text", label="ns", x=1.5, y=19.9, size=5) +
-                annotate(geom="segment", y=19.2, yend=19.2, x=1, xend=2)
-ggsave(file="../../../plots/all_types_sig_overlap_allCondition.pdf",width=3,height=4,dpi=320)
+                annotate(geom="text", label="*", x=2, y=19.4, size=8) +
+                annotate(geom="segment", y=19.3, yend=19.3, x=1, xend=3) +
+                annotate(geom="text", label="ns", x=1.5, y=21.1, size=5) +
+                annotate(geom="segment", y=20.4, yend=20.4, x=1, xend=2)
+ggsave(file="../../../plots/all_types_sig_overlap_allConditions.pdf",width=3,height=4,dpi=320)
+
+bw <- 0.05 # Set bindwidth for histogram
+ggplot(all_gpval_df, aes(x=pvalue, fill=celltype, color=celltype)) +        # Draw hist & density with count on y-axis
+    geom_histogram(color = "white", alpha=0.5, binwidth = bw, position="identity") +
+    geom_density(alpha=0, aes(y = bw * after_stat(count)), bw=bw, size=1) +
+    theme_bw() + scale_fill_manual(values=cols) + 
+    scale_color_manual(values=cols) + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank(), 
+          panel.border=element_blank(),
+          axis.line = element_line(colour="black"),
+          axis.title.x = element_text(size=18, color="black"), 
+          axis.text.x = element_text(size=15, color="black"),
+          axis.title.y = element_text(size=18, color="black"), 
+          axis.text.y = element_text(size=15, color="black"),
+          legend.position = c(0.15,0.85), 
+          legend.title = element_blank(),
+          legend.text = element_text(size=16, color="black")) + 
+    labs(x="pvalue (real > chance)", y="count") +
+    scale_x_continuous(expand=c(0,0)) + 
+    scale_y_continuous(expand=c(0,0)) 
+ggsave(file="../../../plots/all_types_sig_overlap_hist_allConditions.pdf",width=6,height=4,dpi=320)
+
+options(repr.plot.width = 7, repr.plot.height = 4.5) 
+da_gpval_heatmap <- pheatmap(g_pval_mat[,,1], main="dopamine", cluster_cols=FALSE, cluster_rows=FALSE, 
+                             fontsize=12, angle_col=c("45"), border_color="#ededed", breaks=c(0,0.001,0.01,0.05,1), cellwidth=18,
+                             color=colorRampPalette(rev(brewer.pal(n=9,name="Greens")))(5), gaps_row=c(8), gaps_col=c(19))
+save_pheatmap_pdf(da_gpval_heatmap, 
+                  "../../../plots/da_pval_heatmap_greater.pdf", 7, 4.5)
+
+gaba_gpval_heatmap <- pheatmap(g_pval_mat[,,2], main="gaba", cluster_cols=FALSE, cluster_rows=FALSE, 
+                             fontsize=12, angle_col=c("45"), border_color="#ededed", breaks=c(0,0.001,0.01,0.05,1), cellwidth=18,
+                             color=colorRampPalette(rev(brewer.pal(n=9,name="Purples")))(5), gaps_row=c(8), gaps_col=c(19))
+save_pheatmap_pdf(gaba_gpval_heatmap, 
+                  "../../../plots/gaba_pval_heatmap_greater.pdf", 7, 4.5)
+
+glut_gpval_heatmap <- pheatmap(g_pval_mat[,,3], main="glut", cluster_cols=FALSE, cluster_rows=FALSE, 
+                             fontsize=12, angle_col=c("45"), border_color="#ededed", breaks=c(0,0.001,0.01,0.05,1), cellwidth=18,
+                             color=colorRampPalette(rev(brewer.pal(n=9,name="YlOrRd")))(5), gaps_row=c(8), gaps_col=c(19))
+save_pheatmap_pdf(glut_gpval_heatmap, 
+                  "../../../plots/glut_pval_heatmap_greater.pdf", 7, 4.5)
+
+options(repr.plot.width = 3, repr.plot.height = 4) 
+cols <- c("all_da"="#7BC0A0", "all_gaba"="#65A286", "all_glut"="#456F5C")
+all_coexpr_df[all_coexpr_df$celltype %in% c("all_da","all_gaba","all_glut"),] %>% 
+    ggplot(aes(x=celltype,y=pct_both,fill=celltype)) + 
+        geom_bar(stat="summary", fun.data="mean_se") + geom_errorbar(stat="summary", fun.data="mean_se", width=0) +
+        scale_fill_manual(values=cols) +
+        theme_bw() + NoLegend() + 
+        theme(panel.grid.major = element_blank(), 
+              panel.grid.minor = element_blank(), 
+              panel.border = element_blank(),
+              plot.title = element_text(hjust=0.5, size=15, color="black"),
+              axis.line = element_line(colour="black"),
+              axis.title.x = element_text(size=15), 
+              axis.text.x = element_text(size=15, color="black", angle=0),
+              axis.title.y = element_text(size=18, color="black"), 
+              axis.text.y = element_text(size=15, color="black")) +
+        scale_y_continuous(expand=expansion(mult=c(0,0.05)), breaks=c(0,1,2,3,4)) +
+        labs(y="percentage of nuclei \n expressing both genes", x=" ") +
+        scale_x_discrete(expand=c(0.2,0.2), labels=c("da","gaba","glut")) 
+ggsave(file="../../../plots/all_types_pct_coexpr_allConditions.pdf",width=3,height=4,dpi=320)
 
 print("All done!")
 

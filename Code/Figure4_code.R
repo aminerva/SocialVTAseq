@@ -45,13 +45,13 @@ all_hungry_sated_degs <- read.csv(file="../../../analysis/all_hungry_sated_degs.
 
 ######## panel B
 print("Making volcano plot for each celltype")
-cols <- c("down"=hungry_sated_pal[1],"no"=hungry_sated_pal[2],"up"=hungry_sated_pal[3])
+cols <- c("down"=hungry_sated_pal[3],"no"=hungry_sated_pal[2],"up"=hungry_sated_pal[1])
 options(repr.plot.width = 15, repr.plot.height = 5) 
 a <- ggplot(da_degs, aes(x=avg_log2FC, y=-log10(p_val_adj), color=diffexpressed)) +
-        geom_point(size = 1) + xlim(-1,1.2) + 
+        geom_point(size = 2) + xlim(-1,1.2) + 
         scale_color_manual(values=cols) + 
         ggtitle("dopamine", "adjusted p<0.01 and log2FC>0.38") +
-        labs(x="higher in sated <--   log2FC   --> higher in hungry", y="-10log(adj.p)") +
+        labs(x="higher in hungry <--   log2FC   --> higher in sated", y="-10log(adj.p)") +
         NoLegend() + scale_y_continuous(expand=c(0,0), limits=c(-5,200)) +
         theme(axis.text.x = element_text(size=10, color="black"),
               axis.text.y = element_text(size=10, color="black"),
@@ -59,10 +59,10 @@ a <- ggplot(da_degs, aes(x=avg_log2FC, y=-log10(p_val_adj), color=diffexpressed)
               axis.title.y = element_text(size=12, color="black"),
               plot.title = element_text(size=12))  
 b <- ggplot(gaba_degs, aes(x=avg_log2FC, y=-log10(p_val_adj), color=diffexpressed)) +
-        geom_point(size = 1) + xlim(-1,1.2) + 
+        geom_point(size = 2) + xlim(-1,1.2) + 
         scale_color_manual(values=cols) +
         ggtitle("gaba", "adjusted p<0.01 and log2FC>0.38") +
-        labs(x="higher in sated <--   log2FC   --> higher in hungry", y="-10log(adj.p)") +
+        labs(x="higher in hungry <--   log2FC   --> higher in sated", y="-10log(adj.p)") +
         NoLegend() + scale_y_continuous(expand=c(0,0), limits=c(-5,200)) +
         theme(axis.text.x = element_text(size=10, color="black"),
               axis.text.y = element_text(size=10, color="black"),
@@ -70,10 +70,10 @@ b <- ggplot(gaba_degs, aes(x=avg_log2FC, y=-log10(p_val_adj), color=diffexpresse
               axis.title.y = element_text(size=12, color="black"),
               plot.title = element_text(size=12))  
 c <- ggplot(glut_degs, aes(x=avg_log2FC, y=-log10(p_val_adj), color=diffexpressed)) +
-        geom_point(size = 1) + xlim(-1,1.2) + 
+        geom_point(size = 2) + xlim(-1,1.2) + 
         scale_color_manual(values=cols) + 
         ggtitle("glut", "adjusted p<0.01 and log2FC>0.38") +
-        labs(x="higher in sated <--   log2FC   --> higher in hungry", y="-10log(adj.p)") +
+        labs(x="higher in hungry <--   log2FC   --> higher in sated", y="-10log(adj.p)") +
         NoLegend() + scale_y_continuous(expand=c(0,0), limits=c(-5,200)) +
         theme(axis.text.x = element_text(size=10, color="black"),
               axis.text.y = element_text(size=10, color="black"),

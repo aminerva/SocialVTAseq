@@ -21,6 +21,11 @@ suppressPackageStartupMessages(library("Seurat"))
 suppressPackageStartupMessages(library("tibble"))
 suppressPackageStartupMessages(library("tidyr"))
 
+hungry_sated_pal <- natparks.pals("Glacier", 5)
+hungry_sated_pal <- c(hungry_sated_pal[2], # sated
+                      "gray", # control
+                      hungry_sated_pal[4]) # hungry
+
 set.seed(305)
 print("Reading in the seurat objects")
 
@@ -70,13 +75,13 @@ write.csv(glut_degs, file="../../../analysis/glut_degs.csv")
 write.csv(all_hungry_sated_degs, file="../../../analysis/all_hungry_sated_degs.csv")
 
 print("Making volcano plots")
-cols <- c("down"=hungry_sated_pal[1],"no"=hungry_sated_pal[2],"up"=hungry_sated_pal[3])
+cols <- c("down"=hungry_sated_pal[3],"no"=hungry_sated_pal[2],"up"=hungry_sated_pal[1])
 options(repr.plot.width = 15, repr.plot.height = 5) 
 a <- ggplot(da_degs, aes(x=avg_log2FC, y=-log10(p_val_adj), color=diffexpressed)) +
         geom_point(size = 0.1) + xlim(-1,1.2) + 
         scale_color_manual(values=cols) + 
         ggtitle("dopamine", "adjusted p<0.01 and log2FC>0.38") +
-        labs(x="higher in sated <--   log2FC   --> higher in hungry", y="-10log(adj.p)") +
+        labs(x="higher in hungry <--   log2FC   --> higher in sated", y="-10log(adj.p)") +
         geom_label_repel(label=da_degs$label, point.padding=unit(0.4,"lines"), 
                          nudge_x=0, nudge_y=0.5, label.size=0, fill=NA, 
                          min.segment.length=unit(0.1,"lines"), max.overlaps=50, force=2) + 
@@ -90,7 +95,7 @@ b <- ggplot(gaba_degs, aes(x=avg_log2FC, y=-log10(p_val_adj), color=diffexpresse
         geom_point(size = 0.1) + xlim(-1,1.2) + 
         scale_color_manual(values=cols) +
         ggtitle("gaba", "adjusted p<0.01 and log2FC>0.38") +
-        labs(x="higher in sated <--   log2FC   --> higher in hungry", y="-10log(adj.p)") +
+        labs(x="higher in hungry <--   log2FC   --> higher in sated", y="-10log(adj.p)") +
         geom_label_repel(label=gaba_degs$label, point.padding=unit(0.4,"lines"), 
                          nudge_x=0, nudge_y=0.5, label.size=0, fill=NA, 
                          min.segment.length=unit(0.1,"lines"), max.overlaps=50, force=2)+ 
@@ -104,7 +109,7 @@ c <- ggplot(glut_degs, aes(x=avg_log2FC, y=-log10(p_val_adj), color=diffexpresse
         geom_point(size = 0.1) + xlim(-1,1.2) + 
         scale_color_manual(values=cols) + 
         ggtitle("glut", "adjusted p<0.01 and log2FC>0.38") +
-        labs(x="higher in sated <--   log2FC   --> higher in hungry", y="-10log(adj.p)") +
+        labs(x="higher in hungry <--   log2FC   --> higher in sated", y="-10log(adj.p)") +
         geom_label_repel(label=glut_degs$label, point.padding=unit(0.4,"lines"), 
                          nudge_x=0, nudge_y=0.5, label.size=0, fill=NA, 
                          min.segment.length=unit(0.1,"lines"), max.overlaps=50, force=2) + 

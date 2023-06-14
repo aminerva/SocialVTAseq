@@ -1,5 +1,7 @@
 # FoodSocialSeq 
-  
+ 
+This repo contains code to analyze snRNA-seq data and generate figures from the accompanying publication.  
+
 Scripts should be run in the following order  
 1) preprocessing.R  
 2) integrate_objects.sh / integrate_objects.R  

@@ -7,6 +7,6 @@ Scripts should be run in the following order
 4) subset_data.R  
 5) findDEGs.R  
 
-Overlapping representations of food and social stimuli in VTA dopamine neurons. Lindsay Willmore✝1, Adelaide R. Minerva✝1, Ben Engelhard✝1,3, Malavika Murugan1, Brenna McMannon1, Nirja Oak3, Stephan Y. Thiberge1, Catherine J. Peña*1, Ilana B. Witten*1. Neuron. doi:  
+Overlapping representations of food and social stimuli in VTA dopamine neurons. Lindsay Willmore, Adelaide R. Minerva, Ben Engelhard, Malavika Murugan, Brenna McMannon, Nirja Oak, Stephan Y. Thiberge, Catherine J. Peña, Ilana B. Witten. Neuron. doi:  
 
  

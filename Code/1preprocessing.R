@@ -36,17 +36,17 @@ samples <- c(MCVTA1, MCVTA2, MCVTA3, FCVTA1, FCVTA2, FCVTA3, hungryM, hungryF, s
 print("Adding metadata to Seurat objects")
 for (i in 1:length(samples)) {
     
-    # Sample ID
+    # Add sample ID as metadata column
     samples[[i]]$sampleID <- sample_names[[i]]
     
-    # Sex
+    # Add sex as metadata column
     if (grepl("M", sample_names[[i]]) == TRUE) {
         samples[[i]]$sex <- "M"
     } else { 
     samples[[i]]$sex <- "F"
     }
 
-    # Hunger state
+    # Add hunger state as metadata column
     if (grepl("hungry", sample_names[[i]]) == TRUE) {
         samples[[i]]$condition <- "hungry"
     } else if (grepl("sated", sample_names[[i]]) == TRUE) {
@@ -55,93 +55,10 @@ for (i in 1:length(samples)) {
         samples[[i]]$condition <- "control"
     }
     
-    # Mitochondrial and ribosomal genes
+    # Add % of genes that are mitochondrial and ribosomal as metadata column
     samples[[i]][["percent.mt"]] <- PercentageFeatureSet(samples[[i]], pattern="mt-")
     samples[[i]][["percent.Rps"]] <- PercentageFeatureSet(samples[[i]], pattern="Rps")
     samples[[i]][["percent.Rpl"]] <- PercentageFeatureSet(samples[[i]], pattern="Rpl")
-}
-
-print("Making and saving violin plots with QC metrics for each sample")
-for (i in 1:length(samples)) {
-    a1 <- VlnPlot(samples[[i]], features = c("nCount_RNA"), pt.size=0) + 
-            theme(axis.text.x = element_blank(), 
-                  axis.title.x = element_blank(),
-                  axis.ticks.x = element_blank(),
-                  plot.title = element_blank(),
-                  legend.position="none") + 
-            ylim(-100,25000) + ylab("UMI count")
-    a2 <- VlnPlot(samples[[i]], features = c("nFeature_RNA"), pt.size=0) + 
-            theme(axis.text.x = element_blank(), 
-                  axis.title.x = element_blank(),
-                  axis.ticks.x = element_blank(),
-                  plot.title = element_blank(),
-                  legend.position="none") + 
-            ylim(-10,10000) + ylab("unique genes per nuclei")
-    a3 <- VlnPlot(samples[[i]], features = c("percent.mt"), pt.size=0) + 
-            theme(axis.text.x = element_blank(), 
-                  axis.title.x = element_blank(),
-                  axis.ticks.x = element_blank(),
-                  plot.title = element_blank(),
-                  legend.position="none") + 
-            ylim(-0.5,20) + ylab("% mitochondrial genes")
-    a4 <- VlnPlot(samples[[i]], features = c("percent.Rpl"), pt.size=0) + 
-            theme(axis.text.x = element_blank(), 
-                  axis.title.x = element_blank(),
-                  axis.ticks.x = element_blank(),
-                  plot.title = element_blank(),
-                  legend.position="none") + 
-            ylim(-0.5,20) + ylab("% ribosomal genes (Rps)")
-    a5 <- VlnPlot(samples[[i]], features = c("percent.Rpl"), pt.size=0) + 
-            theme(axis.text.x = element_blank(), 
-                  axis.title.x = element_blank(),
-                  axis.ticks.x = element_blank(),
-                  plot.title = element_blank(),
-                  legend.position="none") + 
-            ylim(-0.5,20) + ylab("% ribosomal genes (Rpl")
-    g1 <- arrangeGrob(a1, a2, a3, a4, a5, nrow=1, 
-                     top=textGrob(sample_names[[i]], gp=gpar(fontface=1, fontsize=15)))
-    plotname1 <- paste0("../../../plots/",sample_names[[i]],"_QC_violins.png")
-    ggsave(plotname1, g1, width=12, height=4, dpi=320)
-}
-
-
-print("Making and saving FeatureScatter plots to see relationship btwn QC metrics for each sample")
-for (i in 1:length(samples)) {
-    p1 <- FeatureScatter(samples[[i]], feature1="nCount_RNA", feature2="percent.mt") + 
-            theme(legend.position="none")
-    p2 <- FeatureScatter(samples[[i]], feature1="nCount_RNA", feature2="percent.Rps") + 
-            theme(legend.position="none")
-    p3 <- FeatureScatter(samples[[i]], feature1="nCount_RNA", feature2="percent.Rpl") + 
-            theme(legend.position="none")
-    p4 <- FeatureScatter(samples[[i]], feature1="nCount_RNA", feature2="nFeature_RNA") + 
-            theme(legend.position="none")
-    g2 <- arrangeGrob(p1,p2,p3,p4, nrow=1, 
-                      top=textGrob(sample_names[[i]],gp = gpar(fontface = 1, fontsize = 15)))
-    plotname2 <- paste0("../../../plots/",sample_names[[i]],"_QC_featurescatters.png")
-    ggsave(plotname2, g2, width=14, height=4, dpi=320)
-}
-
-for (i in 1:length(samples)) {    
-    qc.metrics <- samples[[i]][[c("nCount_RNA","nFeature_RNA","percent.mt")]]
-    qc.metrics <- arrange(qc.metrics, percent.mt) 
-    p <- ggplot(qc.metrics, aes(nCount_RNA,nFeature_RNA,colour=percent.mt)) + 
-                geom_point(size=0.3) + 
-                theme_bw() +
-                theme(
-                  axis.title.y = element_text(size=15),
-                  axis.title.x = element_text(size=15),
-                  axis.text.y = element_text(size=15, color="black"),
-                  axis.text.x = element_text(size=15, color="black"),
-                  legend.text = element_text(size=15),
-                  legend.title = element_text(size=15),
-                  plot.title = element_text(hjust = 0.5, size=15),
-                  axis.line = element_line(color="black"),
-                  panel.border = element_blank()) + 
-                labs(y="N. Genes", x="N. UMIs", title=sample_names[i]) +
-                scale_y_continuous(breaks=seq(0,6000,500)) 
-    plot(p)
-    plotname3 <- paste0("../../../plots/",sample_names[[i]],"_QC_featurescatters2.png")
-    ggsave(plotname3, p, width=8, height=4, dpi=320)
 }
 
 pre_filt_counts <- c()
@@ -201,18 +118,6 @@ post_counts_df <- data.frame("sample"=sample_names,
 							 "nuclei"=post_filt_counts,
 							 "filter"=rep("post",length(sample_names)))
 counts_df <- rbind(pre_counts_df, post_counts_df)
-
-ggplot(counts_df, aes(x=sample, y=nuclei, fill=factor(filter, levels=c("pre","post")))) + 
-  geom_col(position="dodge") +
-  theme_classic() + 
-  theme(axis.text.x = element_text(size=15, color="black", angle=45, vjust=1, hjust=1),
-        axis.text.y = element_text(size=15, color="black"),
-        axis.title.x = element_blank(), 
-        axis.title.y = element_text(size=15, color="black"),          
-        plot.title = element_text(size=15, color="black", hjust=0.5, face="plain"),
-        legend.position = ("top")) +
-  labs(y="number of nuclei", title="pre vs post initial filtering", fill="") 
-  ggsave("../../../plots/hungry_sated_nuclei_num.png", width=5, height=6,dpi=320)
 
 print("Saving each individual seurat object")
 for (i in 1:length(samples)) {

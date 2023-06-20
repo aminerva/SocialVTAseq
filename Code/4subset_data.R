@@ -35,7 +35,6 @@ hungry_sated_da <- subset(hungry_sated_neurons, subset = Slc6a3 > 0 | Th > 0 )
 hungry_sated_gaba <- subset(hungry_sated_neurons, subset = Slc32a1>0 & Slc6a3==0 & Th==0 & Slc17a6==0 & Slc17a7==0 & Slc17a8==0 | Gad1>0 & Slc6a3==0 & Th==0 & Slc17a6==0 & Slc17a7==0 & Slc17a8==0 | Gad2>0 & Slc6a3==0 & Th==0 & Slc17a6==0 & Slc17a7==0 & Slc17a8==0)
 hungry_sated_glut <- subset(hungry_sated_neurons, subset = Slc17a6>0 & Slc6a3==0 & Th==0 & Slc32a1==0 & Gad1==0 & Gad2==0 | Slc17a7>0 & Slc6a3==0 & Th==0 & Slc32a1==0 & Gad1==0 & Gad2==0 | Slc17a8>0 & Slc6a3==0 & Th==0 & Slc32a1==0 & Gad1==0 & Gad2==0) 
 
-
 ctrl_da[["nucleusID"]] <- colnames(ctrl_da)
 ctrl_gaba[["nucleusID"]] <- colnames(ctrl_gaba)
 ctrl_glut[["nucleusID"]] <- colnames(ctrl_glut)
